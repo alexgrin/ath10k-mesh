@@ -900,9 +900,15 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
 	arg.channel.max_antenna_gain = chandef->chan->max_antenna_gain * 2;
 
 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-		arg.ssid = arvif->u.ap.ssid;
-		arg.ssid_len = arvif->u.ap.ssid_len;
-		arg.hidden_ssid = arvif->u.ap.hidden_ssid;
+		if (arvif->vif->type == NL80211_IFTYPE_MESH_POINT) {
+			/* hack for mesh beacon */
+			arg.ssid = "A";
+			arg.ssid_len = 1;
+		} else {
+			arg.ssid = arvif->u.ap.ssid;
+			arg.ssid_len = arvif->u.ap.ssid_len;
+			arg.hidden_ssid = arvif->u.ap.hidden_ssid;
+		}
 
 		/* For now allow DFS for AP mode */
 		arg.channel.chan_radar =
@@ -911,10 +917,6 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
 		arg.ssid = arvif->vif->bss_conf.ssid;
 		arg.ssid_len = arvif->vif->bss_conf.ssid_len;
 	}
-
-	/* hack for mesh beacon */
-	arg.ssid = "A";
-	arg.ssid_len = 1;
 
 	ath10k_dbg(ar, ATH10K_DBG_MAC,
 		   "mac vdev %d start center_freq %d phymode %s\n",
